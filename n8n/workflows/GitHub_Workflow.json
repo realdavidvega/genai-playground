@@ -1,0 +1,116 @@
+{
+  "name": "GitHub Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0c3915f2-ef7a-44dd-a9a6-9bdffa0ad961",
+      "name": "When chat message received",
+      "webhookId": "68dbf68b-06ed-44da-bd00-a48709f72138"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        220,
+        0
+      ],
+      "id": "96d749de-c8a8-455e-8392-f66aa04316de",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        220
+      ],
+      "id": "9675c4ab-ab06-43dc-a4b1-a368cec79145",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "JcUtBbHjLimy3MdU",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "http://github_mcp:8001/sse"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        500,
+        220
+      ],
+      "id": "6e689e02-b376-47d7-8c61-5fcd29255ce6",
+      "name": "GitHub MCP"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "04c0b374-c068-4f7e-81d1-5ad6e99881de",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "72378199da3e681a31967a5418f2862d2976c3fd96e8daf26ed6cf0dcf0d80f1"
+  },
+  "id": "E2w33slB29wum4qs",
+  "tags": []
+}

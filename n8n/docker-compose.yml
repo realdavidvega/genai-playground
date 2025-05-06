@@ -1,0 +1,109 @@
+services:
+  traefik:
+    image: traefik
+    restart: unless-stopped
+    command: >
+      --api=true
+      --api.insecure=true
+      --providers.docker=true
+      --providers.docker.exposedbydefault=false
+      --entrypoints.web.address=:80
+      --entrypoints.web.http.redirections.entryPoint.to=websecure
+      --entrypoints.web.http.redirections.entrypoint.scheme=https
+      --entrypoints.websecure.address=:443
+      --certificatesresolvers.mytlschallenge.acme.tlschallenge=true
+      --certificatesresolvers.mytlschallenge.acme.email=${SSL_EMAIL}
+      --certificatesresolvers.mytlschallenge.acme.storage=/letsencrypt/acme.json
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - traefik_data:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [n8n_net]
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.n8n.rule=Host(`${SUBDOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.n8n.tls=true
+      - traefik.http.routers.n8n.entrypoints=web,websecure
+      - traefik.http.routers.n8n.tls.certresolver=mytlschallenge
+      - traefik.http.middlewares.n8n.headers.SSLRedirect=true
+      - traefik.http.middlewares.n8n.headers.STSSeconds=315360000
+      - traefik.http.middlewares.n8n.headers.browserXSSFilter=true
+      - traefik.http.middlewares.n8n.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.n8n.headers.forceSTSHeader=true
+      - traefik.http.middlewares.n8n.headers.SSLHost=${DOMAIN_NAME}
+      - traefik.http.middlewares.n8n.headers.STSIncludeSubdomains=true
+      - traefik.http.middlewares.n8n.headers.STSPreload=true
+      - traefik.http.routers.n8n.middlewares=n8n@docker
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${N8N_DB_NAME:-postgres}
+      - DB_POSTGRESDB_USER=${N8N_DB_USERNAME:-postgres}
+      - DB_POSTGRESDB_PASSWORD=${N8N_DB_PASSWORD:-postgres}
+      - WEBHOOK_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
+      - N8N_EDITOR_BASE_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - N8N_TEMPLATES_ENABLED=true
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+      - EXTERNAL_FRONTEND_HOOKS_URLS=
+      - N8N_DIAGNOSTICS_CONFIG_FRONTEND=
+      - N8N_DIAGNOSTICS_CONFIG_BACKEND=
+    ports:
+      - 5678:5678
+    volumes:
+      - ./storage:/home/node/.n8n
+    networks: [n8n_net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      github_mcp:
+        condition: service_started
+  
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${N8N_DB_NAME:-postgres}
+      POSTGRES_USER: ${N8N_DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${N8N_DB_PASSWORD:-postgres}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - 5434:5432
+    expose:
+      - 5434
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    networks: [n8n_net]
+
+  github_mcp:
+    image: supercorp/supergateway
+    restart: unless-stopped
+    command: >
+      --stdio "npx -y @modelcontextprotocol/server-github"
+      --port 8001
+      --baseUrl http://github_mcp:8001
+    environment:
+      - GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_PASSWORD}
+      - GITHUB_TOOLSETS=all
+    ports:
+      - 8001:8001
+    networks: [n8n_net]
+
+volumes:
+  n8n_data:
+  traefik_data:
+
+networks:
+  n8n_net:
