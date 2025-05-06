@@ -5,8 +5,17 @@ Playground for GenAI code, learning and exercises
 
 ## n8n workflows
 
-To setup n8n playground:
+### Environment
 
-1. Create a DNS: `n8n.davidvegalichacz.io`, locally `hosts` can be used mapping to `127.0.0.1`.
-2. Set `GITHUB_PASSWORD` environment variable. Rest of variables are optional.
-3. Run `cd n8n && make start` to start n8n, and visit `https://n8n.davidvegalichacz.io/`.
+To run n8n, you need to set the following environment variables:
+
+- `DOMAIN_NAME`: your domain name, e.g. `example.io`.
+- `SUBDOMAIN`: your subdomain, e.g. `n8n`.
+- `SSL_EMAIL`: your email address used for SSL certificate generation, e.g. `n8n@example.io`.
+- `GITHUB_PASSWORD`: your GitHub personal access token.
+- `GENERIC_TIMEZONE`: optionally, setup your timezone, e.g. `Europe/Berlin`.
+
+### Usage
+
+1. Create a DNS: `${SUBDOMAIN}.${DOMAIN_NAME}`, e.g. locally `hosts` can be used to add `127.0.0.1 n8n.davidvegalichacz.io`.
+2. Run `cd n8n && make start` to start n8n, and visit `https://n8n.example.io/`.
