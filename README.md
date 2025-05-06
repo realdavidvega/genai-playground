@@ -17,5 +17,13 @@ To run n8n, you need to set the following environment variables:
 
 ### Usage
 
-1. Create a DNS: `${SUBDOMAIN}.${DOMAIN_NAME}`, e.g. locally `hosts` can be used to add `127.0.0.1 n8n.davidvegalichacz.io`.
+1. Create a DNS: `${SUBDOMAIN}.${DOMAIN_NAME}`, e.g. locally `hosts` can be used to add `127.0.0.1 n8n.example.io`.
 2. Run `cd n8n && make start` to start n8n, and visit `https://n8n.example.io/`.
+
+### Considerations
+
+To run certain workflows you would need to have:
+
+- n8n license key (community edition).
+- OpenAI API access token, e.g. `OPENAI_API_KEY`, for OpenAI Chat Model.
+- GitHub personal access token, e.g. `GITHUB_PASSWORD`, for GitHub MCP.
