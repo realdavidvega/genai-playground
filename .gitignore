@@ -142,3 +142,7 @@ dist
 n8n/db/
 n8n/storage
 
+
+# Python
+__pycache__/
+*.py[cod]
